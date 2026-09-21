@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "12104900475",
+    "project_id": "emlay-1d8ba",
+    "storage_bucket": "emlay-1d8ba.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:12104900475:android:bc479d9ed8c0646b99e7de",
+        "android_client_info": {
+          "package_name": "com.example.emlay_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZhVeCAt-amdzrE9gpQUrVFj_h6fPV-Ds"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
