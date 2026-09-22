@@ -6,27 +6,46 @@ let firestore = null;
 let isUsingFirestore = false;
 
 // Attempt to initialize Firebase Admin SDK if key is provided
-const keyCandidates = [
-  process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
-  path.join(__dirname, 'serviceAccountKey.json'),
-  path.join(__dirname, 'firebase-key.json'),
-  path.join(__dirname, '..', 'serviceAccountKey.json')
-];
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    admin = require('firebase-admin');
+    const serviceAccount = typeof process.env.FIREBASE_SERVICE_ACCOUNT === 'string'
+      ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+      : process.env.FIREBASE_SERVICE_ACCOUNT;
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    firestore = admin.firestore();
+    isUsingFirestore = true;
+    console.log('[Database] Connected to Firebase Firestore using FIREBASE_SERVICE_ACCOUNT env var');
+  } catch (err) {
+    console.warn('[Database] Failed initializing Firebase Admin from env var:', err.message);
+  }
+}
 
-for (const keyPath of keyCandidates) {
-  if (keyPath && fs.existsSync(keyPath)) {
-    try {
-      admin = require('firebase-admin');
-      const serviceAccount = require(keyPath);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-      firestore = admin.firestore();
-      isUsingFirestore = true;
-      console.log(`[Database] Connected to Firebase Firestore using ${keyPath}`);
-      break;
-    } catch (err) {
-      console.warn(`[Database] Failed initializing Firebase Admin with ${keyPath}:`, err.message);
+if (!isUsingFirestore) {
+  const keyCandidates = [
+    process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
+    path.join(__dirname, 'serviceAccountKey.json'),
+    path.join(__dirname, 'firebase-key.json'),
+    path.join(__dirname, '..', 'serviceAccountKey.json')
+  ];
+
+  for (const keyPath of keyCandidates) {
+    if (keyPath && fs.existsSync(keyPath)) {
+      try {
+        admin = require('firebase-admin');
+        const serviceAccount = require(keyPath);
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+        firestore = admin.firestore();
+        isUsingFirestore = true;
+        console.log(`[Database] Connected to Firebase Firestore using ${keyPath}`);
+        break;
+      } catch (err) {
+        console.warn(`[Database] Failed initializing Firebase Admin with ${keyPath}:`, err.message);
+      }
     }
   }
 }
@@ -35,9 +54,24 @@ for (const keyPath of keyCandidates) {
 const inMemoryProfiles = new Map();
 const inMemorySessions = new Map();
 
+// Seed default demo profile for Rahul Sharma (8520981975) so live testing works immediately
+inMemoryProfiles.set('8520981975', {
+  mobile: '8520981975',
+  fullName: 'Rahul Sharma',
+  bloodGroup: 'O+',
+  allergies: 'Penicillin, Peanuts',
+  medicines: 'Inhaler (Asthma)',
+  medicalCondition: 'Mild Asthma',
+  emergencyContact: '+91 9876543210',
+  trustedContact: '+91 9876543210',
+  emergencyQrEnabled: true,
+  missingMode: false,
+  updatedAt: new Date().toISOString()
+});
+
 if (!isUsingFirestore) {
   console.log('[Database] Running in High-Reliability Local Mode (Firestore adapter active).');
-  console.log('[Database] Place "serviceAccountKey.json" in the backend folder anytime to switch to live Firebase cloud.');
+  console.log('[Database] Place "serviceAccountKey.json" in backend folder or set FIREBASE_SERVICE_ACCOUNT env var.');
 }
 
 const db = {

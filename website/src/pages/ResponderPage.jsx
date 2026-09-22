@@ -9,7 +9,9 @@ import {
   Clock, 
   CheckCircle2, 
   RefreshCw,
-  User
+  User,
+  QrCode,
+  ShieldCheck
 } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
@@ -76,6 +78,32 @@ export default function ResponderPage() {
     }
   };
 
+  const loadDemoSession = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/qr-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: '8520981975' })
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.token) {
+        setToken(data.token);
+        const newUrl = `${window.location.pathname}?token=${data.token}`;
+        window.history.pushState(null, '', newUrl);
+        await fetchResponderData(data.token);
+      } else {
+        setError(data.error || 'Failed to start demo session.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Could not connect to backend server. Make sure backend is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="main-content">
       {/* Page Header */}
@@ -105,18 +133,20 @@ export default function ResponderPage() {
       {!loading && error && (
         <div className="card unavailable-card card-emergency-border">
           <div className="unavailable-icon">
-            <ShieldAlert size={36} />
+            {token ? <ShieldAlert size={36} /> : <QrCode size={36} color="#3b82f6" />}
           </div>
           <h2 className="unavailable-title">
-            This emergency QR is currently unavailable.
+            {token ? 'This emergency QR is currently unavailable.' : 'Scan an Emergency QR Code'}
           </h2>
           <p className="unavailable-desc">
-            {error.includes('disabled') || error.includes('unavailable') 
-              ? 'Access has been suspended by the device owner, or the device was reported missing.'
-              : error}
+            {token 
+              ? (error.includes('disabled') || error.includes('unavailable') 
+                  ? 'Access has been suspended by the device owner, or the device was reported missing.'
+                  : error)
+              : 'Scan a registered EMLAY emergency QR code to view medical profiles, or click below to launch the live demo profile.'}
           </p>
-          {token && (
-            <div style={{ marginTop: '24px' }}>
+          <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {token ? (
               <button 
                 onClick={() => fetchResponderData(token)} 
                 className="btn-primary" 
@@ -124,8 +154,16 @@ export default function ResponderPage() {
               >
                 <RefreshCw size={16} /> Retry Verification
               </button>
-            </div>
-          )}
+            ) : (
+              <button 
+                onClick={loadDemoSession} 
+                className="btn-primary" 
+                style={{ width: 'auto', display: 'inline-flex', padding: '10px 24px' }}
+              >
+                <ShieldCheck size={16} /> Load Live Demo Profile (Rahul Sharma)
+              </button>
+            )}
+          </div>
         </div>
       )}
 

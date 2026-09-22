@@ -312,9 +312,21 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Start Server
-const server = app.listen(config.PORT, '0.0.0.0', () => {
-  console.log(`
+// Root API info endpoint
+app.get(['/', '/api'], (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'EMLAY Emergency API',
+    version: '1.0.0',
+    time: new Date().toISOString()
+  });
+});
+
+// Start Server if not running in serverless environment (e.g. Vercel)
+let server = null;
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+  server = app.listen(config.PORT, '0.0.0.0', () => {
+    console.log(`
 ======================================================
   EMLAY Backend Server Running!
   Local:       http://localhost:${config.PORT}
@@ -322,7 +334,8 @@ const server = app.listen(config.PORT, '0.0.0.0', () => {
   Responder:   ${config.RESPONDER_BASE_URL}
   Database:    ${db.isUsingFirestore() ? 'Firebase Firestore (Cloud)' : 'Local High-Speed In-Memory Adapter'}
 ======================================================
-  `);
-});
+    `);
+  });
+}
 
 module.exports = { app, server };

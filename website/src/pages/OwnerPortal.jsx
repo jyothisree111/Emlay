@@ -185,9 +185,8 @@ export default function OwnerPortal() {
       if (res.ok && data.success) {
         setQrToken(data.token);
         setQrExpiresIn(data.expiresInSeconds || 300);
-        const host = typeof window !== 'undefined' ? window.location.hostname : PC_IP;
-        const port = typeof window !== 'undefined' ? window.location.port : '3000';
-        const fullUrl = `http://${host}${port ? ':' + port : ''}/?token=${data.token}`;
+        const origin = typeof window !== 'undefined' ? window.location.origin : `http://${PC_IP}:3000`;
+        const fullUrl = `${origin}/?token=${data.token}`;
         setQrUrl(fullUrl);
       }
     } catch (err) {
